@@ -6,7 +6,7 @@ from aryeo import AryeoClient
 
 
 def main() -> None:
-    """List the first page of orders and fetch a single payment-info record."""
+    """List orders and fetch public payment information for a fixture order."""
 
     with AryeoClient.from_env() as client:
         client.orders.list(params={"page": 1, "per_page": 10})
