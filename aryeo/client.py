@@ -26,10 +26,27 @@ from aryeo.orders import OrdersResource
 from aryeo.payroll import PayrollResource
 from aryeo.products import ProductsResource
 from aryeo.scheduling import SchedulingResource
+from aryeo.sentry import SentryReportOptions
 from aryeo.tags import TagsResource
 from aryeo.tasks import TasksResource
 from aryeo.types import RequestTimeout
 from aryeo.videos import VideosResource
+
+_TRUTHY_FLAG_VALUES = frozenset({"1", "true", "yes", "on"})
+
+
+def _env_flag_enabled(value: str | None) -> bool:
+    """Return whether an environment flag value should be treated as enabled.
+
+    Args:
+        value: Raw environment variable value, or `None` when unset.
+
+    Returns:
+        `True` when the value is a recognized truthy flag.
+    """
+
+    return value is not None and value.strip().lower() in _TRUTHY_FLAG_VALUES
+
 
 RESOURCE_NAMES = (
     "addresses",
@@ -79,6 +96,8 @@ class AryeoClient(BaseClient):
         timeout: RequestTimeout = DEFAULT_TIMEOUT,
         user_agent: str = DEFAULT_USER_AGENT,
         http_client: httpx.Client | None = None,
+        report_to_sentry: bool = False,
+        sentry_options: SentryReportOptions | None = None,
     ) -> None:
         """Initialize the Aryeo client and its resource bindings.
 
@@ -88,6 +107,9 @@ class AryeoClient(BaseClient):
             timeout: Default request timeout.
             user_agent: User-Agent header sent on each request.
             http_client: Optional injected `httpx.Client`.
+            report_to_sentry: Opt-in flag enabling enrich-only Sentry reporting.
+            sentry_options: Optional reporting configuration used only when
+                `report_to_sentry` is `True`.
         """
 
         super().__init__(
@@ -96,6 +118,8 @@ class AryeoClient(BaseClient):
             timeout=timeout,
             user_agent=user_agent,
             http_client=http_client,
+            report_to_sentry=report_to_sentry,
+            sentry_options=sentry_options,
         )
         self.addresses = AddressesResource(self)
         self.appointments = AppointmentsResource(self)
@@ -121,6 +145,7 @@ class AryeoClient(BaseClient):
         token_env_var: str = "ARYEO_API_TOKEN",
         base_url_env_var: str = "ARYEO_BASE_URL",
         timeout_env_var: str = "ARYEO_TIMEOUT",
+        sentry_enabled_env_var: str = "ARYEO_SENTRY_ENABLED",
     ) -> "AryeoClient":
         """Build a client from conventional environment variables.
 
@@ -128,6 +153,9 @@ class AryeoClient(BaseClient):
             token_env_var: Environment variable containing the bearer token.
             base_url_env_var: Environment variable overriding the base URL.
             timeout_env_var: Environment variable overriding the timeout.
+            sentry_enabled_env_var: Environment variable that enables enrich-only
+                Sentry reporting when set to a truthy value such as `1` or
+                `true`.
 
         Returns:
             A configured `AryeoClient` instance.
@@ -154,6 +182,7 @@ class AryeoClient(BaseClient):
             token=token,
             base_url=os.getenv(base_url_env_var, DEFAULT_BASE_URL),
             timeout=timeout,
+            report_to_sentry=_env_flag_enabled(os.getenv(sentry_enabled_env_var)),
         )
 
 

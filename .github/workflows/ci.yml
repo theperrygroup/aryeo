@@ -31,3 +31,19 @@ jobs:
       - run: python -m build
       - run: python -m twine check dist/*
       - run: pip-audit
+
+  base-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e .
+      - name: Sentry reporting is a safe no-op without the extra
+        run: >-
+          python -c "import aryeo;
+          from aryeo.sentry import SentryReporter;
+          assert SentryReporter().is_active() is False;
+          print('sentry no-op without extra OK')"

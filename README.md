@@ -39,6 +39,32 @@ Set `ARYEO_API_TOKEN` before using protected operations. `ARYEO_API_KEY` is
 also accepted as a fallback for local `.env` files. Public operations can be
 called without a token.
 
+## Sentry Reporting
+
+Optional, opt-in, enrich-only Sentry reporting is available behind the
+`aryeo[sentry]` extra. The client never calls `sentry_sdk.init()`; it attaches
+to your already-initialized Sentry SDK to capture client errors and request
+breadcrumbs, with bearer-token and PII scrubbing. It is a no-op when reporting
+is off or Sentry is not active.
+
+```bash
+python -m pip install "aryeo[sentry]"
+```
+
+```python
+import sentry_sdk
+from aryeo import AryeoClient
+
+sentry_sdk.init()  # owned by your application
+
+with AryeoClient.from_env() as client:  # or AryeoClient(token=..., report_to_sentry=True)
+    client.orders.list(params={"page": 1, "per_page": 25})
+```
+
+Enable it via `report_to_sentry=True`, or set `ARYEO_SENTRY_ENABLED=1` for
+`AryeoClient.from_env`. See `docs/guides/sentry.md` for configuration and data
+safety details.
+
 ## Live Integration Checks
 
 Live checks are opt-in and avoid mutating API data by default:

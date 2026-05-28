@@ -50,12 +50,14 @@ nav:
       - Orders: guides/orders.md
       - Listings: guides/listings.md
       - Appointments: guides/appointments.md
+      - Sentry Reporting: guides/sentry.md
       - Live Checks: guides/live-checks.md
   - API Reference:
       - api-reference/index.md
       - Client: api-reference/client.md
       - Base Client: api-reference/base-client.md
       - Exceptions: api-reference/exceptions.md
+      - Sentry Reporting: api-reference/sentry.md
       - Models: api-reference/models.md
       - Enums: api-reference/enums.md
       - Addresses: api-reference/addresses.md
@@ -131,3 +133,19 @@ nav:
           - Phase 04 Docs And Examples: planning/aryeo-api-client/execution/api_client_PHASE_04_docs_and_examples.md
           - Phase 05 Workflows And Release: planning/aryeo-api-client/execution/api_client_PHASE_05_workflows_and_release.md
           - Phase 06 Parity Audit: planning/aryeo-api-client/execution/api_client_PHASE_06_parity_audit.md
+          - Sentry Reporting Planning:
+              - Overview: planning/sentry-reporting/README.md
+              - Artifact Path Index: planning/sentry-reporting/ARTIFACT_PATH_INDEX.md
+              - Foundation Overview: planning/sentry-reporting/foundation/README.md
+              - Integration Model ADR: planning/sentry-reporting/foundation/integration-model-adr.md
+              - Data Safety And Scrubbing ADR: planning/sentry-reporting/foundation/data-safety-and-scrubbing-adr.md
+              - Optional Dependency And Versioning ADR: planning/sentry-reporting/foundation/optional-dependency-and-versioning-adr.md
+              - Trackers Overview: planning/sentry-reporting/trackers/README.md
+              - Readiness Overview: planning/sentry-reporting/trackers/readiness-overview.md
+              - Data Safety Readiness: planning/sentry-reporting/trackers/data-safety-readiness.md
+              - Docs And Tests Readiness: planning/sentry-reporting/trackers/docs-tests-readiness.md
+              - Execution Overview: planning/sentry-reporting/execution/README.md
+              - Roadmap: planning/sentry-reporting/execution/roadmap.md
+              - Execution Plan: planning/sentry-reporting/execution/execution-plan.md
+              - Active Plan: planning/sentry-reporting/execution/sentry-reporting-plan.md
+              - Phase 01 Integration Landed: planning/sentry-reporting/execution/sentry_PHASE_01_integration_landed.md

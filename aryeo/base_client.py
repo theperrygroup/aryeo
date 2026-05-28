@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Mapping
 from typing import Any, cast
 
@@ -9,6 +10,7 @@ import httpx
 from pydantic import BaseModel
 
 from aryeo.exceptions import AryeoAPIError, AryeoConfigurationError, AryeoRequestError
+from aryeo.sentry import SentryReporter, SentryReportOptions
 from aryeo.types import JSONMapping, JSONResponse, QueryParams, RequestTimeout
 
 DEFAULT_BASE_URL = "https://api.aryeo.com/v1"
@@ -27,6 +29,8 @@ class BaseClient:
         timeout: RequestTimeout = DEFAULT_TIMEOUT,
         user_agent: str = DEFAULT_USER_AGENT,
         http_client: httpx.Client | None = None,
+        report_to_sentry: bool = False,
+        sentry_options: SentryReportOptions | None = None,
     ) -> None:
         """Initialize the shared client transport.
 
@@ -36,6 +40,10 @@ class BaseClient:
             timeout: Default request timeout.
             user_agent: User-Agent header sent with every request.
             http_client: Optional injected `httpx.Client`.
+            report_to_sentry: Opt-in flag enabling enrich-only Sentry reporting.
+                When `False` (the default) no Sentry reporter is created.
+            sentry_options: Optional reporting configuration used only when
+                `report_to_sentry` is `True`.
         """
 
         self._token = token
@@ -44,6 +52,9 @@ class BaseClient:
         self._user_agent = user_agent
         self._owns_http_client = http_client is None
         self._http_client = http_client or httpx.Client()
+        self._sentry_reporter: SentryReporter | None = (
+            SentryReporter(sentry_options) if report_to_sentry else None
+        )
 
     @property
     def base_url(self) -> str:
@@ -148,6 +159,8 @@ class BaseClient:
             AryeoConfigurationError: If auth is required and no token exists.
         """
 
+        reporter = self._sentry_reporter
+        start = time.monotonic() if reporter is not None else 0.0
         try:
             response = self._http_client.request(
                 method=method,
@@ -158,10 +171,38 @@ class BaseClient:
                 timeout=timeout if timeout is not None else self._default_timeout,
             )
         except httpx.HTTPError as exc:
-            raise AryeoRequestError("The Aryeo request did not complete.", exc) from exc
+            request_error = AryeoRequestError(
+                "The Aryeo request did not complete.", exc
+            )
+            if reporter is not None:
+                reporter.record_request_breadcrumb(
+                    method=method,
+                    path=path,
+                    elapsed_ms=(time.monotonic() - start) * 1000,
+                    params=params,
+                )
+                reporter.capture_request_error(request_error, method=method, path=path)
+            raise request_error from exc
+
+        if reporter is not None:
+            reporter.record_request_breadcrumb(
+                method=method,
+                path=path,
+                status_code=response.status_code,
+                elapsed_ms=(time.monotonic() - start) * 1000,
+                params=params,
+            )
 
         if response.is_error:
-            raise AryeoAPIError.from_response(response)
+            api_error = AryeoAPIError.from_response(response)
+            if reporter is not None:
+                reporter.capture_request_error(
+                    api_error,
+                    method=method,
+                    path=path,
+                    status_code=response.status_code,
+                )
+            raise api_error
 
         if response.status_code == 204 or not response.content:
             return None

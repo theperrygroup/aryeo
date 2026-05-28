@@ -410,11 +410,12 @@ from aryeo.orders import OrdersResource
 from aryeo.payroll import PayrollResource
 from aryeo.products import ProductsResource
 from aryeo.scheduling import SchedulingResource
+from aryeo.sentry import SentryReporter, SentryReportOptions
 from aryeo.tags import TagsResource
 from aryeo.tasks import TasksResource
 from aryeo.videos import VideosResource
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "AryeoAPIError",
@@ -438,6 +439,8 @@ __all__ = [
     "TagsResource",
     "TasksResource",
     "VideosResource",
+    "SentryReportOptions",
+    "SentryReporter",
     "ActivityNameEnum",
     "ActivityPostPayloadNameEnum",
     "ActivityPostPayloadResourceTypeEnum",
